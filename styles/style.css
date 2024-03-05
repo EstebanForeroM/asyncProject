@@ -102,8 +102,8 @@ nav:hover {
 }
 
 #cards-container {
-    margin: 2rem;
-    width: 100%;
+    padding: 2rem;
+    width: 90vw;
     height: 10rem;
     display: flex;
     flex-wrap: wrap;

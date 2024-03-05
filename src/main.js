@@ -1,4 +1,3 @@
-
 console.log('Hello World!')
 
 async function getData() {
@@ -10,6 +9,5 @@ async function getData() {
 const data = getData();
 
 data.then((result) => {
-  console.log(result.meals[0]['idMeal'])
+  console.log(result["meals"]["0"]["idMeal"])
 });
-
