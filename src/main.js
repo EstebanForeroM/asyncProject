@@ -90,7 +90,118 @@ class APIHandler {
 }
 
 class CardCreator {
-  
+  constructor() {
+    this.foodName = "";
+    this.cardHtml = `
+    <img src="img/cubcake.webp" alt="cubcake gamer">
+    <section class="food-info">
+        <h1>${this.foodName}</h1>
+        <section class="category-selector">
+            <button class="ingredients-btn">See ingredients</button>
+            <button class="instructions-btn>Preparation instructions</button>
+            <button class="addinfo-btn>More info</button>
+        </section>
+        <article class="info-container">
+
+            <div class="ingredient-container hidden">
+
+            </div>
+
+            <div class="instructions-container hidden">
+
+            </div>
+
+            <div class="more-info-container hidden">
+
+            </div>
+            
+        </article>
+    </section>
+    <button class="favorite-button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-heart-fill" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
+        </svg>
+    </button>
+    `;
+  }
+
+  createCard(foodData) {
+    this.foodName = foodData.foodName;
+    const card = document.createElement('article');
+    card.classList.add('card');
+    card.innerHTML = this.cardHtml;
+    card.querySelector('.ingredient-container').innerHTML = this.createIngredientList(foodData.ingredients);
+    card.querySelector('.instructions-container').innerHTML = this.createInstructions(foodData.instructions);
+    card.querySelector('.more-info-container').innerHTML = this.createMoreInfo(foodData.additionalInfo);
+    this.setUpbuttons(card);
+    return card;
+  }
+
+  setUpbuttons(card) {
+    const ingredientBtn = card.querySelector('.ingredients-btn');
+    const instructionsBtn = card.querySelector('.instructions-btn');
+    const addInfoBtn = card.querySelector('.addinfo-btn');
+    const favoriteBtn = card.querySelector('.favorite-button');
+
+    ingredientBtn[0].addEventListener('click', () => {
+      card.querySelector('.ingredient-container').classList.toggle('hidden');
+    });
+
+    instructionsBtn[0].addEventListener('click', () => {
+      card.querySelector('.instructions-container').classList.toggle('hidden');
+    });
+
+    addInfoBtn[0].addEventListener('click', () => {
+      card.querySelector('.more-info-container').classList.toggle('hidden');
+    });
+
+    // favoriteBtn.addEventListener('click', () => {
+    //   favoriteBtn.classList.toggle('favorite-button-active');
+    // });
+  }
+
+  createIngredientList(ingredients) {
+    let ingredientList = "";
+    for (let ingredient in ingredients) {
+      ingredientList += `<p>${ingredient}: ${ingredients[ingredient]}</p>`;
+    }
+    return ingredientList;
+  }
+
+  createInstructions(instructions) {
+    return `<p>${instructions}</p>`;
+  }
+
+  createMoreInfo(additionalInfo) {
+    let moreInfo = "";
+    for (let info in additionalInfo) {
+      moreInfo += `<p>${info}: ${additionalInfo[info]}</p>`;
+    }
+    return moreInfo;
+  }
+}
+
+class CardInsertion {
+  constructor() {
+    this.cardCreator = new CardCreator();
+  }
+
+  insertCard(foodData, parentElement, deleteParent = false) {
+    if (deleteParent) {
+      parentElement.innerHTML = "";
+    }
+    const card = this.cardCreator.createCard(foodData);
+    parentElement.appendChild(card);
+  }
 }
 
 const APIHandlerI = new APIHandler();
+
+const cardInsertion = new CardInsertion();
+
+const cardContainer = document.querySelector('main');
+
+APIHandlerI.getRandomFoodData().then((result) => {
+  cardInsertion.insertCard(result, cardContainer, true);
+});
+
