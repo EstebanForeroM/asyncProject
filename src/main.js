@@ -183,11 +183,11 @@ class CardCreator {
       if (favoriteBtn.classList.contains('favorite')) {
         favoriteBtn.classList.remove('favorite');
         favoriteFoodPersistance.removeFavoriteFood(foodId);
-        favoriteContentManager.deleteCardFromContent(foodId);
+        favoriteContentManager.deleteCardFromContent(card);
       } else {
         favoriteBtn.classList.add('favorite');
         favoriteFoodPersistance.addFavoriteFood(foodId);
-        favoriteContentManager.addCardToContent(foodId);
+        favoriteContentManager.addCardToContent(card);
       }
     
     });
@@ -349,15 +349,12 @@ class FavoriteContentManager {
     });
   }
 
-  addCardToContent(foodId) {
-    this.apiHandler.getFoodDataById(foodId).then((result) => {
-      this.cardInsertion.insertCard(result, this.cardContainer);
-    });
+  addCardToContent(card) {
+    this.cardContainer.prepend(card);
   }
 
-  deleteCardFromContent(cardId) {
-    const card = document.getElementById(cardId);
-    card.remove();
+  deleteCardFromContent(card) {
+    this.cardContainer.removeChild(card);
   }
 }
 
