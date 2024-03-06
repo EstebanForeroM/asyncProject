@@ -191,7 +191,9 @@ nav:hover {
 }
 
 .favorite {
-    fill: #ed20ed;
+    svg {
+        fill: #ed20ed !important;
+    }
 }
 
 .card::before,

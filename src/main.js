@@ -1,5 +1,4 @@
 
-
 class FoodData {
 
   #foodName
@@ -89,8 +88,7 @@ class APIHandler {
 }
 
 class CardCreator {
-  constructor() {
-    this.favoriteFoodPersistance = new FavoriteFoodPersistance();
+  constructor(favoriteContentManager) {
     this.foodName = "";
     this.mealThumb = "";
     this.cardHtml = "";
@@ -150,7 +148,9 @@ class CardCreator {
     const addInfoBtn = card.querySelector('.addinfo-btn');
     const favoriteBtn = card.querySelector('.favorite-button');
 
-    if (this.favoriteFoodPersistance.contain(foodId)) {
+    const favoriteFoodPersistance = favoriteContentManager.favoriteFoodPersistance;
+
+    if (favoriteFoodPersistance.contain(foodId)) {
       favoriteBtn.classList.add('favorite');
     }
 
@@ -182,11 +182,14 @@ class CardCreator {
     favoriteBtn.addEventListener('click', () => {
       if (favoriteBtn.classList.contains('favorite')) {
         favoriteBtn.classList.remove('favorite');
-        this.favoriteFoodPersistance.removeFavoriteFood(foodId);
+        favoriteFoodPersistance.removeFavoriteFood(foodId);
+        favoriteContentManager.deleteCardFromContent(foodId);
       } else {
         favoriteBtn.classList.add('favorite');
-        this.favoriteFoodPersistance.addFavoriteFood(foodId);
+        favoriteFoodPersistance.addFavoriteFood(foodId);
+        favoriteContentManager.addCardToContent(foodId);
       }
+    
     });
   }
 
@@ -226,24 +229,29 @@ class CardCreator {
 }
 
 class CardInsertion {
-  constructor() {
-    this.cardCreator = new CardCreator();
+  constructor(favoriteContentManager) {
+    this.cardCreator = new CardCreator(favoriteContentManager);
   }
 
-  insertCard(foodData, parentElement, deleteParent = false) {
+  insertCard(foodData, parentElement, deleteParent = false, cardId = null) {
     if (deleteParent) {
       parentElement.innerHTML = "";
     }
     const card = this.cardCreator.createCard(foodData);
+
+    if (cardId) {
+      card.id = cardId;
+    }
+
     parentElement.appendChild(card);
   }
 }
 
 class MainContentManager {
-  constructor() {
+  constructor(favoriteContentManager) {
     this.cardContainer = document.querySelector('main');
     this.apiHandler = new APIHandler();
-    this.cardInsertion = new CardInsertion();
+    this.cardInsertion = new CardInsertion(favoriteContentManager);
 
     this.randomButton = document.querySelector('#random-button');
     this.setUpRandomButton();
@@ -324,20 +332,37 @@ class FavoriteFoodPersistance {
 }
 
 class FavoriteContentManager {
-  constructor() {
-    this.favoriteFoodPersistance = new FavoriteFoodPersistance();
+  constructor(favoriteFoodPersistance) {
+    this.favoriteFoodPersistance = favoriteFoodPersistance;
     this.cardContainer = document.querySelector('#favorite-container');
     this.cardInsertion = new CardInsertion();
+    this.apiHandler = new APIHandler();
     this.setUpFavoriteContent();
   }
 
   setUpFavoriteContent() {
+    this.cardContainer.innerHTML = "";
     this.favoriteFoodPersistance.favoriteFoods.forEach((foodId) => {
       this.apiHandler.getFoodDataById(foodId).then((result) => {
         this.cardInsertion.insertCard(result, this.cardContainer);
       });
     });
   }
+
+  addCardToContent(foodId) {
+    this.apiHandler.getFoodDataById(foodId).then((result) => {
+      this.cardInsertion.insertCard(result, this.cardContainer);
+    });
+  }
+
+  deleteCardFromContent(cardId) {
+    const card = document.getElementById(cardId);
+    card.remove();
+  }
 }
 
-const mainContentManager = new MainContentManager();
+const favoriteFoodPersistance = new FavoriteFoodPersistance();
+
+const favoriteContentManager = new FavoriteContentManager(favoriteFoodPersistance);
+
+const mainContentManager = new MainContentManager(favoriteContentManager);
