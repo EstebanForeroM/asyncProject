@@ -65,25 +65,41 @@ class FoodData {
 
 class APIHandler {
   constructor() {
+    this.parentElement = document.querySelector('main')
+    this.loaderElementString = `<span class="loader"><span class="loader-inner"></span></span>`
     this.apiUrl = 'https://www.themealdb.com/api/json/v1/1/';
   }
 
   async getFoodDataByName(name) {
+    this.showLoader()
     const response = await fetch(this.apiUrl + 'search.php?s=' + name)
     const data = await response.json()
+    this.hideLoader()
     return new FoodData(data)
   }
 
   async getFoodDataById(id) {
+    this.showLoader()
     const response = await fetch(this.apiUrl + 'lookup.php?i=' + id)
     const data = await response.json()
+    this.hideLoader()
     return new FoodData(data)
   }
 
   async getRandomFoodData() {
+    this.showLoader()
     const response = await fetch(this.apiUrl + 'random.php')
     const data = await response.json()
+    this.hideLoader()
     return new FoodData(data)
+  }
+
+  showLoader() {
+    this.parentElement.innerHTML = this.loaderElementString;
+  }
+
+  hideLoader() {
+    this.parentElement.innerHTML = ""
   }
 }
 
@@ -134,19 +150,22 @@ class CardCreator {
     this.updateBaseCardHtml();
     const card = document.createElement('article');
     card.classList.add('card');
+    card.id = "card-id" + foodData.additionalInfo.id;
     card.innerHTML = this.cardHtml;
     card.querySelector('.ingredient-container').innerHTML = this.createIngredientList(foodData.ingredients);
     card.querySelector('.instructions-container').innerHTML = this.createInstructions(foodData.instructions);
     card.querySelector('.more-info-container').innerHTML = this.createMoreInfo(foodData.additionalInfo);
-    this.setUpbuttons(card, foodData.additionalInfo.id);
+    this.setUpbuttons(card, foodData);
     return card;
   }
 
-  setUpbuttons(card, foodId) {
+  setUpbuttons(card, foodData) {
+    const foodId = foodData.additionalInfo.id;
     const ingredientBtn = card.querySelector('.ingredients-btn');
     const instructionsBtn = card.querySelector('.instructions-btn');
     const addInfoBtn = card.querySelector('.addinfo-btn');
     const favoriteBtn = card.querySelector('.favorite-button');
+    favoriteBtn.classList.add(`fav-${foodId}`)
 
     const favoriteFoodPersistance = favoriteContentManager.favoriteFoodPersistance;
 
@@ -181,13 +200,9 @@ class CardCreator {
 
     favoriteBtn.addEventListener('click', () => {
       if (favoriteBtn.classList.contains('favorite')) {
-        favoriteBtn.classList.remove('favorite');
-        favoriteFoodPersistance.removeFavoriteFood(foodId);
-        favoriteContentManager.deleteCardFromContent(card);
+        favoriteContentManager.deleteCardFromContent(card, foodId);
       } else {
-        favoriteBtn.classList.add('favorite');
-        favoriteFoodPersistance.addFavoriteFood(foodId);
-        favoriteContentManager.addCardToContent(card);
+        favoriteContentManager.addCardToContent(card, foodId);
       }
     
     });
@@ -233,15 +248,11 @@ class CardInsertion {
     this.cardCreator = new CardCreator(favoriteContentManager);
   }
 
-  insertCard(foodData, parentElement, deleteParent = false, cardId = null) {
+  insertCard(foodData, parentElement, deleteParent = false) {
     if (deleteParent) {
       parentElement.innerHTML = "";
     }
     const card = this.cardCreator.createCard(foodData);
-
-    if (cardId) {
-      card.id = cardId;
-    }
 
     parentElement.appendChild(card);
   }
@@ -292,7 +303,8 @@ class MainContentManager {
     this.apiHandler.getFoodDataByName(foodName).then((result) => {
       this.cardInsertion.insertCard(result, this.cardContainer, true)
     }).catch(() => {
-      alert('No food with that name found')
+      const main = document.querySelector('main');
+      main.innerHTML = `<h1 id="not-found">Error<br>We can't find the meal you searched for.</h1>`;
     })
   }
 }
@@ -349,12 +361,37 @@ class FavoriteContentManager {
     });
   }
 
-  addCardToContent(card) {
-    this.cardContainer.prepend(card);
+  addCardToContent(card, id) {
+    this.favoriteFoodPersistance.addFavoriteFood(id);
+    const cardToInsert = card.cloneNode(true);
+    this.linkFavoriteButton(cardToInsert, id);
+    this.cardContainer.prepend(cardToInsert);
+    this.changeButtonState(id);
   }
 
-  deleteCardFromContent(card) {
-    this.cardContainer.removeChild(card);
+  deleteCardFromContent(card, id) {
+    const childCard = this.cardContainer.querySelector("#card-id" + id);
+    this.cardContainer.removeChild(childCard);
+    this.favoriteFoodPersistance.removeFavoriteFood(id);
+    this.changeButtonState(id);
+  }
+
+  changeButtonState(id) {
+    const favoriteBtns = document.querySelectorAll('.fav-' + id);
+    favoriteBtns.forEach((btn) => {
+      btn.classList.toggle('favorite');
+    });
+  }
+
+  linkFavoriteButton(card, id) {
+    const favoriteBtn = card.querySelector('.favorite-button');
+    favoriteBtn.addEventListener('click', () => {
+      if (favoriteBtn.classList.contains('favorite')) {
+        this.deleteCardFromContent(card, id);
+      } else {
+        this.addCardToContent(card, id);
+      }
+    });
   }
 }
 
