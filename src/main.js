@@ -198,14 +198,7 @@ class CardCreator {
       this.turnOnContainer(buttonArray, 2, 'non-active')
     });
 
-    favoriteBtn.addEventListener('click', () => {
-      if (favoriteBtn.classList.contains('favorite')) {
-        favoriteContentManager.deleteCardFromContent(card, foodId);
-      } else {
-        favoriteContentManager.addCardToContent(card, foodId);
-      }
-    
-    });
+    favoriteContentManager.linkFavoriteButton(card, foodId);
   }
 
   turnOnContainer(elementArray, index, className) {
