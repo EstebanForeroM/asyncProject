@@ -295,7 +295,7 @@ class MainContentManager {
     const foodName = this.searchBar.value
     this.apiHandler.getFoodDataByName(foodName).then((result) => {
       this.cardInsertion.insertCard(result, this.cardContainer, true)
-    }).catch(() => {
+    }).catch((error) => {
       const main = document.querySelector('main');
       main.innerHTML = `<h1 id="not-found">Error<br>We can't find the meal you searched for.</h1>`;
     })
@@ -346,7 +346,6 @@ class FavoriteContentManager {
   }
 
   setUpFavoriteContent() {
-    this.cardContainer.innerHTML = "";
     this.favoriteFoodPersistance.favoriteFoods.forEach((foodId) => {
       this.apiHandler.getFoodDataById(foodId).then((result) => {
         this.cardInsertion.insertCard(result, this.cardContainer);
