@@ -344,7 +344,7 @@ class FavoriteContentManager {
     this.apiHandler = new APIHandler();
     this.setUpFavoriteContent();
   }
-
+  
   setUpFavoriteContent() {
     this.favoriteFoodPersistance.favoriteFoods.forEach((foodId) => {
       this.apiHandler.getFoodDataById(foodId).then((result) => {
